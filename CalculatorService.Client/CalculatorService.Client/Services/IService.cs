@@ -13,5 +13,6 @@ namespace CalculatorService.Client.Services
         void Divide(Division division, string clientID);
         void Subtraction(Subtraction subtraction, string clientID);
         void Factor(Factor factor, string clientID);
+        void GetLogFile(Date date);
     }
 }

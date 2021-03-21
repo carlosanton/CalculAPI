@@ -28,6 +28,7 @@ namespace CalculatorService.Server
         {
 
             services.AddSingleton<ILogOperations>(option => new LogOperations());
+            services.AddSingleton<ILog>(option => new Log());
 
             services.AddHttpClient();
 

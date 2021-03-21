@@ -3,6 +3,7 @@ using CalculatorService.Shared;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -13,7 +14,7 @@ namespace CalculatorService.Client
     {
         static void Main(string[] args)
         {
-            List<string> listOptions = new List<string>() { "1", "2", "3", "4", "5", "6", "x" };
+            List<string> listOptions = new List<string>() { "1", "2", "3", "4", "5", "6", "7", "x" };
             var menuOption = String.Empty;
             do
             {
@@ -30,6 +31,7 @@ namespace CalculatorService.Client
                     Console.WriteLine("4) Division");
                     Console.WriteLine("5) Square");
                     Console.WriteLine("6) Query");
+                    Console.WriteLine("7) Download log file by date");
                     Console.WriteLine("x) Exit");
                     Console.Write("\r\nSelect an option: ");
                     menuOption = Console.ReadLine();
@@ -60,6 +62,10 @@ namespace CalculatorService.Client
                             Query(clientID);
                             Console.ReadLine();
                             break;
+                        case "7":
+                            DownloadFile();
+                            Console.ReadLine();
+                            break;
                         case "x":
                             break;
                         default:
@@ -69,6 +75,83 @@ namespace CalculatorService.Client
                 } while (!listOptions.Contains(menuOption));
                 
             } while (menuOption.ToLower() != "x");
+        }
+
+        private static void DownloadFile()
+        {
+            var yearSearch = String.Empty;
+            var monthSearch = String.Empty;
+            var daySearch = String.Empty;
+            DateTime tryDate = DateTime.Now;
+            bool isCorrectYear = false;
+            bool isCorrectMonth = false;
+            bool isCorrectDay = false;
+            do
+            {
+                Console.Write("\r\nEnter year (yyyy): ");
+                yearSearch = Console.ReadLine();
+
+                bool isNumeric = int.TryParse(yearSearch, out _);
+
+                if ((yearSearch.Length == 4 && isNumeric) && isNumeric)
+                {
+                    isCorrectYear = true;
+                }
+
+                if (!isNumeric)
+                {
+                    Console.WriteLine("The year must be a numeric value");
+                }
+
+            } while (!isCorrectYear);
+
+            do
+            {
+                Console.Write("\r\nEnter month (mm): ");
+                monthSearch = Console.ReadLine();
+
+                bool isNumeric = int.TryParse(monthSearch, out _);
+
+                if ((monthSearch.Length == 1 || monthSearch.Length == 2) && isNumeric)
+                {
+                    isCorrectMonth = true;
+                }
+
+                if (!isNumeric)
+                {
+                    Console.WriteLine("The month must be a numeric value");
+                }
+
+            } while (!isCorrectMonth);
+
+            do
+            {
+                Console.Write("\r\nEnter day (dd): ");
+                daySearch = Console.ReadLine();
+
+                bool isNumeric = int.TryParse(daySearch, out _);
+
+                if ((daySearch.Length == 1 || daySearch.Length == 2) && isNumeric)
+                {
+                    isCorrectDay = true;
+                }
+
+                if (!isNumeric)
+                {
+                    Console.WriteLine("The day must be a numeric value");
+                }
+
+            } while (!isCorrectDay);
+
+            Date date = new Date
+            {
+                Year = yearSearch,
+                Month = monthSearch.Length == 1 ? "0" + monthSearch : monthSearch,
+                Day = daySearch.Length == 1 ? "0" + daySearch : daySearch
+            };
+
+            IService _service = new Service();
+            _service.GetLogFile(date);
         }
 
         private static void Factor(string clientID)

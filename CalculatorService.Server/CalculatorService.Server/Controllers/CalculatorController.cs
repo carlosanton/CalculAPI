@@ -1,11 +1,9 @@
 ﻿using CalculatorService.Server.Objects;
 using CalculatorService.Shared;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace CalculatorService.Server.Controllers
 {
@@ -14,10 +12,12 @@ namespace CalculatorService.Server.Controllers
     public class CalculatorController : ControllerBase
     {
         private readonly ILogOperations _logOperations;
+        private readonly ILog _logs;
 
-        public CalculatorController(ILogOperations logOperations)
+        public CalculatorController(ILogOperations logOperations, ILog logs)
         {
             _logOperations = logOperations;
+            _logs = logs;
         }
 
         [HttpPost("add")]
@@ -32,6 +32,8 @@ namespace CalculatorService.Server.Controllers
                 // If have tracking-id, save log
                 _logOperations.SetOperationsLog(Request.Headers["X-Evi-Tracking-Id"], new Operations() { Calculation = "Sum", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(sums.Addends, " + "), String.Empty, sums.Total) });
 
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Success", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(sums.Addends), Operation = new Operations() { Calculation = "Sum", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(sums.Addends, " + "), String.Empty, sums.Total) } }));
+
                 return Ok(new { Sum = sums.Total });
             }
             catch (Exception ex)
@@ -42,6 +44,8 @@ namespace CalculatorService.Server.Controllers
                     ErrorCode = "Internal Server Error",
                     ErrorStatus = 400
                 };
+
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Error", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(sums.Addends), Operation = error }));
 
                 return BadRequest(error);
             }
@@ -61,6 +65,8 @@ namespace CalculatorService.Server.Controllers
                 // If have tracking-id, save log
                 _logOperations.SetOperationsLog(Request.Headers["X-Evi-Tracking-Id"], new Operations() { Calculation = "Sub", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(values, " - "), String.Empty, subtraction.Total) });
 
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Success", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(new { Minuend = subtraction.Minuend, Subtrahend = subtraction.Subtrahend }), Operation = new Operations() { Calculation = "Sub", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(values, " - "), String.Empty, subtraction.Total) } }));
+
                 return Ok(new { Difference = subtraction.Total });
             }
             catch (Exception ex)
@@ -71,6 +77,8 @@ namespace CalculatorService.Server.Controllers
                     ErrorCode = "Internal Server Error",
                     ErrorStatus = 400
                 };
+
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Error", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(new { Minuend = subtraction.Minuend, Subtrahend = subtraction.Subtrahend }), Operation = error }));
 
                 return BadRequest(error);
             }
@@ -86,7 +94,9 @@ namespace CalculatorService.Server.Controllers
                 methods.GetProductResults(factor);
                 
                 // If have tracking-id, save log
-                _logOperations.SetOperationsLog(Request.Headers["X-Evi-Tracking-Id"], new Operations() { Calculation = "Mul", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(factor.Factors, " * "), String.Empty, factor.Total) });
+                _logOperations.SetOperationsLog(Request.Headers["X-Evi-Tracking-Id"], new Operations() { Calculation = "Mult", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(factor.Factors, " * "), String.Empty, factor.Total) });
+
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Success", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(factor.Factors), Operation = new Operations() { Calculation = "Mult", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(factor.Factors, " * "), String.Empty, factor.Total) } }));
 
                 return Ok(new { Product = factor.Total });
             }
@@ -98,6 +108,8 @@ namespace CalculatorService.Server.Controllers
                     ErrorCode = "Internal Server Error",
                     ErrorStatus = 400
                 };
+
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Error", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(factor.Factors), Operation = error }));
 
                 return BadRequest(error);
             }
@@ -117,6 +129,8 @@ namespace CalculatorService.Server.Controllers
                 // If have tracking-id, save log
                 _logOperations.SetOperationsLog(Request.Headers["X-Evi-Tracking-Id"], new Operations() { Calculation = "Div", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(values, " / "), String.Empty, division.Total) });
 
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Success", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(new { Dividend = division.Dividend, Divisor = division.Divisor }), Operation = new Operations() { Calculation = "Div", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(values, " / "), String.Empty, division.Total) } }));
+
                 return Ok(new { Quotient = division.Quotient, Remainder = division.Remainder });
             }
             catch (Exception ex)
@@ -127,6 +141,8 @@ namespace CalculatorService.Server.Controllers
                     ErrorCode = "Internal Server Error",
                     ErrorStatus = 400
                 };
+
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Error", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(new { Dividend = division.Dividend, Divisor = division.Divisor }), Operation = error }));
 
                 return BadRequest(error);
             }
@@ -144,6 +160,8 @@ namespace CalculatorService.Server.Controllers
                 // If have tracking-id, save log
                 _logOperations.SetOperationsLog(Request.Headers["X-Evi-Tracking-Id"], new Operations() { Calculation = "Sqrt", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(new string[] { sqrt.Number }, String.Empty), "v~", sqrt.Total) });
 
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Success", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(sqrt.Number), Operation = new Operations() { Calculation = "Sqrt", Operation = String.Format(Helpers.OperationString.ConvertArrayInText(new string[] { sqrt.Number }, String.Empty), "v~", sqrt.Total) } }));
+
                 return Ok(new { Square = sqrt.Total });
             }
             catch (Exception ex)
@@ -154,6 +172,8 @@ namespace CalculatorService.Server.Controllers
                     ErrorCode = "Internal Server Error",
                     ErrorStatus = 400
                 };
+
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Error", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(sqrt.Number), Operation = error }));
 
                 return BadRequest(error);
             }
@@ -173,10 +193,50 @@ namespace CalculatorService.Server.Controllers
                     ErrorStatus = 400
                 };
 
+                _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Error", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(user), Operation = error }));
+
                 return BadRequest(error);
             }
 
+
+
+            _logs.SetLogs(DateTime.Now.ToString("dd/MM/yyyy"), JsonConvert.SerializeObject(new { Type = "Success", User = Request.Headers["X-Evi-Tracking-Id"], EntryData = JsonConvert.SerializeObject(user), Operation = new Operations() { Calculation = "Query", Operation = String.Empty } }));
+
             return Ok(new { Operations = _logOperations.OperationsLog[user.Id] });
+        }
+
+        [HttpGet]
+        public IActionResult GetLogFile(string encodedDate)
+        {
+            using (MemoryStream mem = new MemoryStream())
+            {
+                using (StreamWriter writer = new StreamWriter(mem))
+                {
+                    var base64EncodedBytes = System.Convert.FromBase64String(encodedDate);
+                    var date = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+
+                    if(_logs.Logs.ContainsKey(date))
+                    {
+                        var logs = _logs.GetLogs()[date];
+                        if (logs.Count == 0)
+                        {
+                            writer.WriteLine($"No logs for date {date}");
+                        }
+                        else
+                        {
+                            foreach (var log in logs)
+                            {
+                                writer.WriteLine(log);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        writer.WriteLine($"No logs for date {date}");
+                    }
+                }
+                return File(mem.ToArray(), "text/plain");
+            }
         }
     }
 }
