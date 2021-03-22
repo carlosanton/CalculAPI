@@ -11,6 +11,7 @@ This project has 4 parts:
 
 ## Server
 This project is a REST web api and it has the operations of our calculator.
+Also, has a log about all the operations that the users do, and a log with all the things that happend during execution.
 
 ## Client
 This is a console project.
